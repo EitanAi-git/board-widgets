@@ -1,0 +1,43 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Board widgets</title>
+<style>
+  html,body{margin:0;min-height:100%}
+  body{background:#f7f6f3;background-image:radial-gradient(#d6d3cc 1.2px,transparent 1.2px);background-size:24px 24px;font-family:sans-serif;overflow-x:hidden}
+  #wrap{position:relative;margin:0 auto;transform-origin:top left}
+  .card{position:absolute;border-radius:14px;overflow:hidden;box-shadow:0 2px 10px rgba(0,0,0,.18);background:#1c1c1e}
+  .card iframe{display:block;width:100%;height:100%;border:0}
+  .open{position:absolute;top:6px;right:8px;z-index:2;font-size:12px;color:#aaa;text-decoration:none;background:rgba(28,28,30,.85);padding:2px 6px;border-radius:6px}
+</style>
+</head>
+<body>
+<div id="wrap"></div>
+<script>
+// Same positions and sizes as on the whiteboard
+var W=[
+  ["counter","Counter",-340,-340,340,340],["scoreboard","Scoreboard",40,-340,330,340],["poll","Quick poll",420,-340,330,340],
+  ["timer","Timer",-340,40,340,340],["stopwatch","Stopwatch",40,40,320,300],["dice","Dice roller",420,40,320,300],
+  ["notes","Shared notes",-340,420,320,300],["todo","Shared to-do list",40,420,340,340],["random-picker","Random picker",420,420,340,320],
+  ["spinning-wheel","Spinning wheel",-340,800,340,340],["coin-flip","Coin flip",40,800,340,340],["team-shuffler","Team shuffler",420,800,340,340],
+  ["pomodoro","Pomodoro",-340,1180,340,340],["rock-paper-scissors","Rock paper scissors",40,1180,340,340],["mood-check-in","Mood check-in",420,1180,340,340]
+];
+var PAD=40,minX=-340,minY=-340,maxX=0,maxY=0;
+W.forEach(function(w){maxX=Math.max(maxX,w[2]+w[4]);maxY=Math.max(maxY,w[3]+w[5])});
+var BW=maxX-minX+PAD*2,BH=maxY-minY+PAD*2;
+var wrap=document.getElementById("wrap");
+wrap.style.width=BW+"px";wrap.style.height=BH+"px";
+W.forEach(function(w){
+  var c=document.createElement("div");c.className="card";
+  c.style.left=(w[2]-minX+PAD)+"px";c.style.top=(w[3]-minY+PAD)+"px";c.style.width=w[4]+"px";c.style.height=w[5]+"px";
+  var a=document.createElement("a");a.className="open";a.href="widgets/"+w[0]+".html";a.textContent="↗";a.title="Open "+w[1];
+  var f=document.createElement("iframe");f.src=a.href;f.title=w[1];
+  c.append(a,f);wrap.appendChild(c);
+});
+function fit(){var s=Math.min(1,document.documentElement.clientWidth/BW);wrap.style.transform="scale("+s+")";wrap.style.marginLeft=s<1?"0":"auto";document.body.style.height=(BH*s)+"px"}
+window.addEventListener("resize",fit);fit();
+</script>
+</body>
+</html>

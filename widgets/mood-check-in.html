@@ -1,0 +1,9 @@
+<!doctype html><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><script src="../shim.js"></script>
+<title>Mood check-in</title><style>body{box-sizing:border-box;height:100vh;overflow:auto}</style><style>html,body{margin:0;background:#1c1c1e}body{font-family:sans-serif;color:#f2f2f2;padding:16px;box-sizing:border-box;min-height:100%}h3{margin:0 0 12px;font-size:16px}.b{font-size:14px;padding:8px 14px;border-radius:8px;border:1px solid #555;background:#2c2c2e;color:#f2f2f2;cursor:pointer;margin-right:8px}.b.p{border:none;background:#D97757;color:#fff}input{width:100%}.o{position:relative;margin-bottom:8px;border:1px solid #555;border-radius:12px;overflow:hidden;cursor:pointer;height:40px;background:#2c2c2e}.bar{position:absolute;left:0;top:0;bottom:0;background:#D97757;opacity:.55}.t{position:relative;display:flex;justify-content:space-between;padding:11px 14px;font-size:15px}</style><h3>Mood check-in</h3><div id="l"></div><button class="b" id="rs">Reset</button><script>
+var d=appifactEmbed.load()||{c:[0,0,0,0,0]};
+var N=["Great","Good","Okay","Tired","Stressed"];
+function draw(){var tot=0;d.c.forEach(function(v){tot+=v});var l=document.getElementById("l");l.textContent="";N.forEach(function(nm,i){var c=document.createElement("div");c.className="o";var b=document.createElement("div");b.className="bar";b.style.width=(tot?d.c[i]/tot*100:0)+"%";var t=document.createElement("div");t.className="t";var a=document.createElement("span");a.textContent=nm;var n=document.createElement("span");n.textContent=d.c[i];t.append(a,n);c.append(b,t);c.onclick=function(){d.c[i]++;appifactEmbed.save(d);draw()};l.appendChild(c)})}
+document.getElementById("rs").onclick=function(){d.c=[0,0,0,0,0];appifactEmbed.save(d);draw()};
+appifactEmbed.onLoad(function(v){if(v&&v.c){d=v;draw()}});
+draw();
+</script>

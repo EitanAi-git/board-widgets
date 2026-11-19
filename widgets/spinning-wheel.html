@@ -1,0 +1,20 @@
+<!doctype html><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><script src="../shim.js"></script>
+<title>Spinning wheel</title><style>body{box-sizing:border-box;height:100vh;overflow:auto}</style><style>html,body{margin:0;background:#1c1c1e}body{font-family:sans-serif;color:#f2f2f2;padding:12px;box-sizing:border-box;min-height:100%;text-align:center}h3{margin:0 0 6px;font-size:16px;text-align:left}canvas{display:block;margin:0 auto 6px}#res{font-size:16px;font-weight:700;height:22px;margin-bottom:6px;color:#D97757}input{width:100%;box-sizing:border-box;font-size:13px;padding:8px;border-radius:8px;border:1px solid #555;background:#2c2c2e;color:#f2f2f2;margin-bottom:8px}.b{font-size:14px;padding:8px 18px;border-radius:8px;border:none;background:#D97757;color:#fff;cursor:pointer}</style><h3>Spinning wheel</h3><canvas id="c" width="190" height="190"></canvas><div id="res"></div><input id="in" placeholder="Options, separated by commas"><button class="b" id="go">Spin</button><script>
+var d=appifactEmbed.load()||{items:["Pizza","Tacos","Sushi","Burgers"],res:""};
+var cv=document.getElementById("c"),x=cv.getContext("2d"),ang=0,spinning=false;
+var cols=["#D97757","#7C5CBF","#2E8B57","#2F7CC4","#C9A227","#878787"];
+var inp=document.getElementById("in"),res=document.getElementById("res");
+function draw(){var n=d.items.length||1,a=2*Math.PI/n,cx=95,cy=100,r=86;x.clearRect(0,0,190,190);
+for(var i=0;i<n;i++){x.beginPath();x.moveTo(cx,cy);x.arc(cx,cy,r,ang+i*a,ang+(i+1)*a);x.closePath();x.fillStyle=cols[i%cols.length];x.fill();x.strokeStyle="#1c1c1e";x.lineWidth=2;x.stroke();
+x.save();x.translate(cx,cy);x.rotate(ang+i*a+a/2);x.fillStyle="#fff";x.font="bold 12px sans-serif";x.textAlign="right";x.fillText((d.items[i]||"").slice(0,12),r-8,4);x.restore()}
+x.beginPath();x.arc(cx,cy,10,0,7);x.fillStyle="#1c1c1e";x.fill();
+x.beginPath();x.moveTo(cx-9,4);x.lineTo(cx+9,4);x.lineTo(cx,22);x.closePath();x.fillStyle="#f2f2f2";x.fill();
+inp.value=d.items.join(", ");res.textContent=d.res?"→ "+d.res:""}
+function save(){appifactEmbed.save(d)}
+inp.onchange=function(){d.items=inp.value.split(",").map(function(s){return s.trim()}).filter(Boolean).slice(0,12);if(!d.items.length)d.items=["Yes","No"];d.res="";save();draw()};
+document.getElementById("go").onclick=function(){if(spinning)return;spinning=true;var s=ang,t=s+10*Math.PI+Math.random()*2*Math.PI,st=Date.now(),D=3200;
+function f(){var p=Math.min(1,(Date.now()-st)/D);ang=s+(t-s)*(1-Math.pow(1-p,3));draw();if(p<1){requestAnimationFrame(f)}else{spinning=false;var n=d.items.length,a=2*Math.PI/n,m=((-Math.PI/2-ang)%(2*Math.PI)+2*Math.PI)%(2*Math.PI);d.res=d.items[Math.floor(m/a)%n];save();draw()}}
+f()};
+appifactEmbed.onLoad(function(v){if(v&&!spinning){d=v;draw()}});
+draw();
+</script>

@@ -1,0 +1,10 @@
+<!doctype html><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><script src="../shim.js"></script>
+<title>Scoreboard</title><style>body{box-sizing:border-box;height:100vh;overflow:auto}</style><style>html,body{margin:0;background:#1c1c1e}body{font-family:sans-serif;color:#f2f2f2;padding:16px;box-sizing:border-box;min-height:100%}h3{margin:0 0 12px;font-size:16px}.r{display:flex;align-items:center;gap:8px;margin-bottom:10px}.r input{flex:1;min-width:0;font-size:14px;padding:8px;border-radius:8px;border:1px solid #555;background:#2c2c2e;color:#f2f2f2}.s{font-size:28px;font-weight:700;width:44px;text-align:center}.r button{font-size:22px;width:40px;height:40px;border-radius:12px;border:1px solid #555;background:#2c2c2e;color:#f2f2f2;cursor:pointer}.r button.p{border:none;background:#D97757;color:#fff}.b{font-size:14px;padding:8px 14px;border-radius:8px;border:1px solid #555;background:#2c2c2e;color:#f2f2f2;cursor:pointer;margin-right:8px}</style><h3>Scoreboard</h3><div id="l"></div><button class="b" id="add">+ Team</button><button class="b" id="rs">Reset</button><script>
+var d=appifactEmbed.load()||{teams:[{name:"Team A",score:0},{name:"Team B",score:0}]};
+function save(){appifactEmbed.save(d)}
+function draw(){var l=document.getElementById("l");l.textContent="";d.teams.forEach(function(t){var r=document.createElement("div");r.className="r";var n=document.createElement("input");n.value=t.name;n.onchange=function(){t.name=n.value;save()};var m=document.createElement("button");m.textContent="−";m.onclick=function(){t.score--;save();draw()};var s=document.createElement("div");s.className="s";s.textContent=t.score;var p=document.createElement("button");p.className="p";p.textContent="+";p.onclick=function(){t.score++;save();draw()};r.append(n,m,s,p);l.appendChild(r)})}
+document.getElementById("add").onclick=function(){if(d.teams.length<5){d.teams.push({name:"Team "+(d.teams.length+1),score:0});save();draw()}};
+document.getElementById("rs").onclick=function(){d.teams.forEach(function(t){t.score=0});save();draw()};
+appifactEmbed.onLoad(function(x){if(x){d=x;draw()}});
+draw();
+</script>

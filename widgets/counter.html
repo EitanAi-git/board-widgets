@@ -1,0 +1,39 @@
+<!doctype html><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><script src="../shim.js"></script>
+<title>Counter</title><style>body{box-sizing:border-box;height:100vh;overflow:auto}</style><div style="font-family:sans-serif;text-align:center;padding:16px;background:#1c1c1e;color:#f2f2f2;min-height:100%;box-sizing:border-box"><div id="n" style="font-size:96px;font-weight:700;line-height:1.1">0</div><div style="display:flex;gap:12px;justify-content:center;margin-top:16px"><button id="m" style="font-size:32px;width:72px;height:56px;border-radius:12px;border:1px solid #555;background:#2c2c2e;color:#f2f2f2;cursor:pointer">−</button><button id="p" style="font-size:32px;width:72px;height:56px;border-radius:12px;border:none;background:#D97757;color:#fff;cursor:pointer">+</button></div><div style="display:flex;gap:12px;justify-content:center;margin-top:16px"><button id="r" style="font-size:16px;padding:8px 16px;border-radius:8px;border:1px solid #555;background:#2c2c2e;color:#f2f2f2;cursor:pointer">Reset</button><button id="s" style="font-size:16px;padding:8px 16px;border-radius:8px;border:1px solid #555;background:#2c2c2e;color:#f2f2f2;cursor:pointer">Sound: on</button></div></div><script>
+document.body.style.margin="0";
+document.body.style.background="#1c1c1e";
+document.documentElement.style.background="#1c1c1e";
+var c=0;
+var on=true;
+var ac=null;
+var d=appifactEmbed.load();
+if(d&&typeof d.count==="number")c=d.count;
+function tone(f1,f2,dur,type,vol){
+  if(!on)return;
+  try{
+    if(!ac){var AC=window.AudioContext||window.webkitAudioContext;if(!AC)return;ac=new AC();}
+    if(ac.state==="suspended")ac.resume();
+    var o=ac.createOscillator();var g=ac.createGain();
+    var t=ac.currentTime;
+    o.type=type;
+    o.frequency.setValueAtTime(f1,t);
+    o.frequency.exponentialRampToValueAtTime(f2,t+dur);
+    g.gain.setValueAtTime(vol,t);
+    g.gain.exponentialRampToValueAtTime(0.001,t+dur);
+    o.connect(g);g.connect(ac.destination);
+    o.start(t);o.stop(t+dur+0.02);
+  }catch(e){}
+}
+function show(){document.getElementById("n").textContent=c;}
+function upd(v){c=v;show();appifactEmbed.save({count:c});}
+document.getElementById("p").onclick=function(){tone(660,990,0.12,"triangle",0.25);upd(c+1);};
+document.getElementById("m").onclick=function(){tone(360,210,0.12,"triangle",0.25);upd(c-1);};
+document.getElementById("r").onclick=function(){tone(800,120,0.35,"sawtooth",0.15);upd(0);};
+document.getElementById("s").onclick=function(){
+  on=!on;
+  this.textContent="Sound: "+(on?"on":"off");
+  tone(520,780,0.1,"sine",0.2);
+};
+appifactEmbed.onLoad(function(x){if(x&&typeof x.count==="number"){c=x.count;show();}});
+show();
+</script>
