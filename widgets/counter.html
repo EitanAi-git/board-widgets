@@ -8,34 +8,52 @@ var on=true;
 var ac=null;
 var d=appifactEmbed.load();
 if(d&&typeof d.count==="number")c=d.count;
-// Crisp tap click, modelled on a chess-clock button: ~4 ms of sound,
-// a ring near f1 (bright) and f2 (body) plus a tiny bright noise transient.
-function click(f1,f2,vol){
+// Physical button sound. Short noise bursts ring through small resonators
+// (plastic snap, housing knock, low thump), like a real switch. Each press is
+// slightly different. Press plays on finger down, a lighter click on release.
+function getAC(){if(!ac){var AC=window.AudioContext||window.webkitAudioContext;if(!AC)return null;ac=new AC();}if(ac.state==="suspended")ac.resume();return ac;}
+function ring(out,sr,f,tau,burstTau,gain){
+  var n=out.length,r=Math.exp(-1/(tau*sr)),c=2*r*Math.cos(2*Math.PI*f/sr),y1=0,y2=0,tmp=new Float32Array(n),pk=1e-9;
+  for(var i=0;i<n;i++){var x=(Math.random()*2-1)*Math.exp(-i/(burstTau*sr));var y=x+c*y1-r*r*y2;y2=y1;y1=y;tmp[i]=y;if(Math.abs(y)>pk)pk=Math.abs(y);}
+  for(i=0;i<n;i++)out[i]+=tmp[i]/pk*gain;
+}
+function button(pitch,vol,release){
   if(!on)return;
   try{
-    if(!ac){var AC=window.AudioContext||window.webkitAudioContext;if(!AC)return;ac=new AC();}
-    if(ac.state==="suspended")ac.resume();
-    var sr=ac.sampleRate,n=Math.floor(sr*0.04),buf=ac.createBuffer(1,n,sr),d=buf.getChannelData(0),prev=0;
-    for(var i=0;i<n;i++){
-      var t=i/sr,r=Math.random()*2-1,hp=r-prev;prev=r;
-      var v=0.5*Math.sin(2*Math.PI*f1*t)*Math.exp(-t/0.0016)
-           +0.25*Math.sin(2*Math.PI*f2*t)*Math.exp(-t/0.0025)
-           +0.1*hp*Math.exp(-t/0.0012);
-      d[i]=v*Math.min(1,t/0.0004)*vol;
+    var a=getAC();if(!a)return;
+    var sr=a.sampleRate,n=Math.floor(sr*0.07),buf=a.createBuffer(1,n,sr),d=buf.getChannelData(0);
+    var j=function(){return 1+(Math.random()-0.5)*0.1};
+    if(!release){
+      ring(d,sr,3000*pitch*j(),0.0018,0.0006,0.55);
+      ring(d,sr,1150*pitch*j(),0.006,0.001,0.35);
+      ring(d,sr,190*pitch*j(),0.012,0.0015,0.45);
+    }else{
+      ring(d,sr,3900*pitch*j(),0.0012,0.0004,0.5);
+      ring(d,sr,1500*pitch*j(),0.004,0.0007,0.2);
     }
-    var src=ac.createBufferSource();src.buffer=buf;src.connect(ac.destination);src.start();
+    var pk=1e-9;for(var i=0;i<n;i++)if(Math.abs(d[i])>pk)pk=Math.abs(d[i]);
+    var g=vol*(release?0.45:0.9)*(0.92+Math.random()*0.16)/pk;
+    for(i=0;i<n;i++)d[i]*=g*Math.min(1,i/(sr*0.0003));
+    var src=a.createBufferSource();src.buffer=buf;src.connect(a.destination);src.start();
   }catch(e){}
+}
+function wire(id,pitch,vol){
+  var el=document.getElementById(id),down=false;
+  el.addEventListener("pointerdown",function(){down=true;button(pitch,vol,false);});
+  el.addEventListener("pointerup",function(){if(down)button(pitch,vol,true);down=false;});
+  el.addEventListener("pointerleave",function(){down=false;});
+  el.addEventListener("click",function(e){if(e.detail===0)button(pitch,vol,false);}); // keyboard
 }
 function show(){document.getElementById("n").textContent=c;}
 function upd(v){c=v;show();appifactEmbed.save({count:c});}
-document.getElementById("p").onclick=function(){click(5200,1600,1.3);upd(c+1);};
-document.getElementById("m").onclick=function(){click(4400,1350,1.3);upd(c-1);};
-document.getElementById("r").onclick=function(){click(3400,1100,1.2);upd(0);};
+document.getElementById("p").onclick=function(){upd(c+1);};
+document.getElementById("m").onclick=function(){upd(c-1);};
+document.getElementById("r").onclick=function(){upd(0);};
 document.getElementById("s").onclick=function(){
   on=!on;
   this.textContent="Sound: "+(on?"on":"off");
-  click(6000,1900,0.6);
 };
+wire("p",1.0,1);wire("m",0.9,1);wire("r",0.78,1);wire("s",1.15,0.6);
 appifactEmbed.onLoad(function(x){if(x&&typeof x.count==="number"){c=x.count;show();}});
 show();
 </script>
