@@ -1,5 +1,5 @@
 // Caches every page so the installed app opens offline. Bump VERSION after changing files.
-var VERSION = "v7";
+var VERSION = "v8";
 var FILES = [
   "./", "index.html", "shim.js", "manifest.webmanifest",
   "icons/icon-192.png", "icons/icon-512.png", "icons/maskable-512.png",

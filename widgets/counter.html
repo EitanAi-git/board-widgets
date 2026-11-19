@@ -8,31 +8,33 @@ var on=true;
 var ac=null;
 var d=appifactEmbed.load();
 if(d&&typeof d.count==="number")c=d.count;
-// Short mechanical click: a tiny burst of filtered noise, no ringing tone
-function click(freq,vol,dur){
+// Crisp tap click, modelled on a chess-clock button: ~4 ms of sound,
+// a ring near f1 (bright) and f2 (body) plus a tiny bright noise transient.
+function click(f1,f2,vol){
   if(!on)return;
   try{
     if(!ac){var AC=window.AudioContext||window.webkitAudioContext;if(!AC)return;ac=new AC();}
     if(ac.state==="suspended")ac.resume();
-    var t=ac.currentTime,n=Math.floor(ac.sampleRate*dur);
-    var buf=ac.createBuffer(1,n,ac.sampleRate),data=buf.getChannelData(0);
-    for(var i=0;i<n;i++)data[i]=(Math.random()*2-1)*Math.pow(1-i/n,4);
-    var src=ac.createBufferSource();src.buffer=buf;
-    var f=ac.createBiquadFilter();f.type="bandpass";f.frequency.value=freq;f.Q.value=1.2;
-    var g=ac.createGain();g.gain.value=vol;
-    src.connect(f);f.connect(g);g.connect(ac.destination);
-    src.start(t);
+    var sr=ac.sampleRate,n=Math.floor(sr*0.04),buf=ac.createBuffer(1,n,sr),d=buf.getChannelData(0),prev=0;
+    for(var i=0;i<n;i++){
+      var t=i/sr,r=Math.random()*2-1,hp=r-prev;prev=r;
+      var v=0.5*Math.sin(2*Math.PI*f1*t)*Math.exp(-t/0.0016)
+           +0.25*Math.sin(2*Math.PI*f2*t)*Math.exp(-t/0.0025)
+           +0.1*hp*Math.exp(-t/0.0012);
+      d[i]=v*Math.min(1,t/0.0004)*vol;
+    }
+    var src=ac.createBufferSource();src.buffer=buf;src.connect(ac.destination);src.start();
   }catch(e){}
 }
 function show(){document.getElementById("n").textContent=c;}
 function upd(v){c=v;show();appifactEmbed.save({count:c});}
-document.getElementById("p").onclick=function(){click(3200,0.9,0.018);upd(c+1);};
-document.getElementById("m").onclick=function(){click(1900,0.9,0.018);upd(c-1);};
-document.getElementById("r").onclick=function(){click(1200,0.8,0.03);upd(0);};
+document.getElementById("p").onclick=function(){click(5200,1600,1.3);upd(c+1);};
+document.getElementById("m").onclick=function(){click(4400,1350,1.3);upd(c-1);};
+document.getElementById("r").onclick=function(){click(3400,1100,1.2);upd(0);};
 document.getElementById("s").onclick=function(){
   on=!on;
   this.textContent="Sound: "+(on?"on":"off");
-  click(2500,0.6,0.012);
+  click(6000,1900,0.6);
 };
 appifactEmbed.onLoad(function(x){if(x&&typeof x.count==="number"){c=x.count;show();}});
 show();
