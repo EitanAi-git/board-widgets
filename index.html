@@ -52,12 +52,15 @@
   .mini{flex:none;width:120px;cursor:pointer}
   .mini .ico{width:120px;height:90px;border-radius:16px;font-size:38px;background:var(--raise)}
   .mini div:last-child{font-size:13px;margin-top:6px;color:var(--dim)}
+  #stage{overflow:hidden}
+  #ver{text-align:center;font-size:10px;color:#55555a;padding:6px 0 calc(8px + env(safe-area-inset-bottom));letter-spacing:.04em}
   #toast{position:fixed;left:50%;bottom:30px;transform:translateX(-50%) translateY(20px);background:#f2f2f2;color:#111;padding:10px 16px;border-radius:999px;font-size:14px;font-weight:600;opacity:0;transition:.2s;z-index:20;pointer-events:none}
   #toast.on{opacity:1;transform:translateX(-50%)}
 </style>
 </head>
 <body>
-<div id="wrap"></div>
+<div id="stage"><div id="wrap"></div></div>
+<div id="ver"></div>
 
 <div id="shade"></div>
 <div id="sheet" role="dialog" aria-modal="true" aria-labelledby="t">
@@ -118,7 +121,7 @@ W.forEach(function(w){
   c.appendChild(f);c.onclick=function(){openSheet(w,true)};wrap.appendChild(c);
 });
 function url(w){return "widgets/"+w[0]+".html"}
-function fit(){var s=Math.min(1,document.documentElement.clientWidth/BW);wrap.style.transform="scale("+s+")";wrap.style.marginLeft=s<1?"0":"auto";wrap.style.height=BH+"px";document.body.style.minHeight=(BH*s)+"px"}
+function fit(){var s=Math.min(1,document.documentElement.clientWidth/BW);wrap.style.transform="scale("+s+")";wrap.style.marginLeft=s<1?"0":"auto";wrap.style.height=BH+"px";document.getElementById("stage").style.height=(BH*s)+"px"}
 window.addEventListener("resize",fit);fit();
 
 // Sheet
@@ -172,6 +175,8 @@ $("reset").onclick=function(){
   $("ff").src=$("ff").src;previews[cur[0]].src=previews[cur[0]].src;toast(cur[1]+" reset");
 };
 
+// Version shown at the bottom comes from VERSION in sw.js
+fetch("sw.js",{cache:"no-store"}).then(function(r){return r.text()}).then(function(t){var m=t.match(/VERSION = "([^"]+)"/);if(m)$("ver").textContent=m[1]}).catch(function(){});
 if("serviceWorker" in navigator)navigator.serviceWorker.register("sw.js");
 </script>
 </body>
