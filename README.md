@@ -13,7 +13,7 @@ Fifteen small single-file web tools, originally built as embeds on a Claude whit
 ## Run
 
 No build step. Open `index.html` to see them all on one page, or any file in `widgets/` on its own.
-Live on GitHub Pages: https://eitanai-git.github.io/board-widgets/ (laid out like the whiteboard).
+Live on GitHub Pages: https://eitanai-git.github.io/board-widgets/ (laid out like the whiteboard). Installable as an app: open it in Chrome → ⋮ → Install app. Works offline.
 
 ## How state works
 

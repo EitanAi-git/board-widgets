@@ -4,6 +4,11 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <title>Board widgets</title>
+<link rel="manifest" href="manifest.webmanifest">
+<meta name="theme-color" content="#1c1c1e">
+<link rel="icon" href="icons/icon-192.png">
+<link rel="apple-touch-icon" href="icons/icon-192.png">
+<meta name="apple-mobile-web-app-capable" content="yes">
 <style>
   html,body{margin:0;min-height:100%}
   body{background:#f7f6f3;background-image:radial-gradient(#d6d3cc 1.2px,transparent 1.2px);background-size:24px 24px;font-family:sans-serif;overflow-x:hidden}
@@ -38,6 +43,7 @@ W.forEach(function(w){
 });
 function fit(){var s=Math.min(1,document.documentElement.clientWidth/BW);wrap.style.transform="scale("+s+")";wrap.style.marginLeft=s<1?"0":"auto";document.body.style.height=(BH*s)+"px"}
 window.addEventListener("resize",fit);fit();
+if("serviceWorker" in navigator)navigator.serviceWorker.register("sw.js");
 </script>
 </body>
 </html>
