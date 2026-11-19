@@ -177,7 +177,7 @@ $("reset").onclick=function(){
 
 // Version shown at the bottom comes from VERSION in sw.js
 fetch("sw.js",{cache:"no-store"}).then(function(r){return r.text()}).then(function(t){var m=t.match(/VERSION = "([^"]+)"/);if(m)$("ver").textContent=m[1]}).catch(function(){});
-if("serviceWorker" in navigator)navigator.serviceWorker.register("sw.js");
+if("serviceWorker" in navigator)navigator.serviceWorker.register("sw.js",{updateViaCache:"none"});
 </script>
 </body>
 </html>
