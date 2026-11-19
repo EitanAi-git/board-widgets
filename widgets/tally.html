@@ -1,0 +1,32 @@
+<!doctype html><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><script src="../shim.js"></script><script src="../click.js"></script>
+<title>Tally for two</title>
+<style>
+  html,body{margin:0;height:100%;background:#1c1c1e;font-family:system-ui,sans-serif;color:#fff;overflow:hidden;user-select:none;-webkit-user-select:none}
+  .wrap{display:flex;flex-direction:column;height:100%}
+  .p{flex:1;position:relative;display:flex;flex-direction:column;align-items:center;justify-content:center;cursor:pointer;touch-action:manipulation}
+  .p.top{transform:rotate(180deg);background:#D97757}
+  .p.bot{background:#2F7CC4}
+  .n{font-size:84px;font-weight:800;line-height:1;font-variant-numeric:tabular-nums}
+  .name{font-size:14px;font-weight:600;opacity:.9;margin-top:4px;background:transparent;border:0;color:#fff;text-align:center;font-family:inherit;width:60%}
+  .minus{position:absolute;left:10px;bottom:10px;width:40px;height:40px;border-radius:12px;border:0;background:rgba(0,0,0,.25);color:#fff;font-size:24px;cursor:pointer}
+  .bar{display:flex;justify-content:center;padding:6px;background:#1c1c1e}
+  .bar button{font:600 13px system-ui,sans-serif;padding:6px 14px;border-radius:10px;border:1px solid #555;background:#2c2c2e;color:#f2f2f2;cursor:pointer}
+</style>
+<div class="wrap">
+  <div class="p top" id="p0"><div class="n" id="n0">0</div><input class="name" id="name0" aria-label="Player 1 name"><button class="minus" id="m0" type="button" aria-label="Minus one">−</button></div>
+  <div class="bar"><button id="rs" type="button">Reset</button></div>
+  <div class="p bot" id="p1"><div class="n" id="n1">0</div><input class="name" id="name1" aria-label="Player 2 name"><button class="minus" id="m1" type="button" aria-label="Minus one">−</button></div>
+</div>
+<script>
+var d=Object.assign({s:[0,0],names:["Player 1","Player 2"]},appifactEmbed.load());
+function draw(){[0,1].forEach(function(i){document.getElementById("n"+i).textContent=d.s[i];var nm=document.getElementById("name"+i);if(document.activeElement!==nm)nm.value=d.names[i]})}
+function changed(){draw();appifactEmbed.save(d)}
+[0,1].forEach(function(i){
+  document.getElementById("p"+i).addEventListener("click",function(e){if(e.target.tagName==="INPUT"||e.target.tagName==="BUTTON")return;d.s[i]++;playClick(1,1);changed()});
+  document.getElementById("m"+i).addEventListener("click",function(){d.s[i]--;playClick(.75,1);changed()});
+  var nm=document.getElementById("name"+i);nm.addEventListener("change",function(){d.names[i]=nm.value||("Player "+(i+1));changed()});
+});
+document.getElementById("rs").onclick=function(){d.s=[0,0];playClick(.6,.9);changed()};
+appifactEmbed.onLoad(function(v){if(v){d=v;draw()}});
+draw();
+</script>

@@ -1,0 +1,48 @@
+<!doctype html><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><script src="../shim.js"></script>
+<title>Decibel meter</title>
+<style>
+  html,body{margin:0;height:100%;background:#1c1c1e;font-family:system-ui,sans-serif;color:#f2f2f2;overflow:hidden}
+  body{padding:16px;box-sizing:border-box;text-align:center}
+  h3{margin:0 0 6px;font-size:16px;text-align:left}
+  #db{font-size:72px;font-weight:800;line-height:1;font-variant-numeric:tabular-nums;margin-top:8px}
+  #lbl{font-size:15px;font-weight:600;margin:4px 0 12px;color:#D97757;min-height:20px}
+  .meter{height:16px;border-radius:8px;background:#2c2c2e;overflow:hidden;margin-bottom:12px}
+  #fill{height:100%;width:0;background:linear-gradient(90deg,#2E8B57,#C9A227 60%,#D97757 80%,#c0392b);transition:width .08s}
+  .row{display:flex;gap:10px;margin-bottom:12px}
+  .box{flex:1;background:#2c2c2e;border-radius:12px;padding:8px}
+  .box b{display:block;font-size:20px}.box span{font-size:11px;color:#aaa}
+  button{font:600 15px system-ui,sans-serif;padding:10px 22px;border-radius:12px;border:0;background:#D97757;color:#fff;cursor:pointer}
+  #note{font-size:11px;color:#777;margin-top:8px}
+</style>
+<h3>Decibel meter</h3>
+<div id="db">--</div><div id="lbl">Tap Start and allow the mic</div>
+<div class="meter"><div id="fill"></div></div>
+<div class="row"><div class="box"><b id="avg">--</b><span>Average</span></div><div class="box"><b id="max">--</b><span>Peak</span></div></div>
+<button id="go" type="button">Start</button>
+<div id="note">Approximate: phone mics aren't calibrated.</div>
+<script>
+var ac=null,an=null,stream=null,raf=0,sum=0,cnt=0,peak=0,smooth=0;
+function label(v){return v<40?"Quiet":v<60?"Normal talking":v<75?"Loud":v<90?"Very loud":"Painfully loud"}
+function loop(){
+  var b=new Float32Array(an.fftSize);an.getFloatTimeDomainData(b);
+  var s=0;for(var i=0;i<b.length;i++)s+=b[i]*b[i];
+  var rms=Math.sqrt(s/b.length),v=Math.max(0,20*Math.log10(rms+1e-9)+94); // rough offset to sound level
+  smooth=smooth?smooth*0.8+v*0.2:v;sum+=smooth;cnt++;peak=Math.max(peak,smooth);
+  document.getElementById("db").textContent=Math.round(smooth)+" dB";
+  document.getElementById("lbl").textContent=label(smooth);
+  document.getElementById("fill").style.width=Math.min(100,smooth/110*100)+"%";
+  document.getElementById("avg").textContent=Math.round(sum/cnt);
+  document.getElementById("max").textContent=Math.round(peak);
+  raf=requestAnimationFrame(loop);
+}
+function stop(){cancelAnimationFrame(raf);if(stream)stream.getTracks().forEach(function(t){t.stop()});stream=null;if(ac)ac.close();ac=null;document.getElementById("go").textContent="Start"}
+document.getElementById("go").onclick=function(){
+  if(stream){stop();return}
+  if(!navigator.mediaDevices||!navigator.mediaDevices.getUserMedia){document.getElementById("lbl").textContent="No microphone access here";return}
+  navigator.mediaDevices.getUserMedia({audio:{echoCancellation:false,noiseSuppression:false,autoGainControl:false}}).then(function(s){
+    stream=s;ac=new (window.AudioContext||window.webkitAudioContext)();an=ac.createAnalyser();an.fftSize=2048;
+    ac.createMediaStreamSource(s).connect(an);sum=cnt=peak=smooth=0;
+    document.getElementById("go").textContent="Stop";loop();
+  }).catch(function(){document.getElementById("lbl").textContent="Microphone blocked. Allow it in the browser settings."});
+};
+</script>

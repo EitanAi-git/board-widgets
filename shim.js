@@ -11,7 +11,21 @@
     save: function (obj) {
       try { localStorage.setItem(key, JSON.stringify(obj)); } catch (e) {}
     },
-    onLoad: function (fn) { listeners.push(fn); }
+    onLoad: function (fn) { listeners.push(fn); },
+    // Settings edited from the details pop-up. Returns defaults merged with what's
+    // saved; onChange gets the new merged object whenever the pop-up changes them.
+    settings: function (defaults, onChange) {
+      var skey = "settings:" + location.pathname;
+      function get() {
+        var s = {};
+        try { s = JSON.parse(localStorage.getItem(skey) || "{}") || {}; } catch (e) {}
+        var out = {};
+        for (var k in defaults) out[k] = (k in s) ? s[k] : defaults[k];
+        return out;
+      }
+      if (onChange) window.addEventListener("storage", function (e) { if (e.key === skey) onChange(get()); });
+      return get();
+    }
   };
   // Full-screen version (?full=1&w=..&h=..): scale the widget up to fill the screen, centred.
   var q = new URLSearchParams(location.search);

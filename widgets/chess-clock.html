@@ -1,0 +1,60 @@
+<!doctype html><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><script src="../shim.js"></script><script src="../click.js"></script>
+<title>Chess clock</title>
+<style>
+  html,body{margin:0;height:100%;background:#1c1c1e;font-family:system-ui,sans-serif;color:#f2f2f2;overflow:hidden;user-select:none;-webkit-user-select:none}
+  .wrap{display:flex;flex-direction:column;height:100%}
+  .side{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;background:#2c2c2e;cursor:pointer;transition:background .15s;touch-action:manipulation}
+  .side.top{transform:rotate(180deg)}
+  .side.act{background:#D97757;color:#fff}
+  .side.out{background:#8a2b2b;color:#fff}
+  .t{font-size:64px;font-weight:800;font-variant-numeric:tabular-nums;line-height:1}
+  .m{font-size:13px;opacity:.75;margin-top:6px}
+  .bar{display:flex;justify-content:center;gap:10px;padding:8px;background:#1c1c1e}
+  .bar button{font:600 14px system-ui,sans-serif;padding:8px 14px;border-radius:10px;border:1px solid #555;background:#2c2c2e;color:#f2f2f2;cursor:pointer}
+  .bar span{align-self:center;font-size:12px;color:#888}
+</style>
+<div class="wrap">
+  <div class="side top" id="a"><div class="t" id="ta"></div><div class="m" id="ma"></div></div>
+  <div class="bar"><button id="pp" type="button">Pause</button><span id="info"></span><button id="rs" type="button">Reset</button></div>
+  <div class="side" id="b"><div class="t" id="tb"></div><div class="m" id="mb"></div></div>
+</div>
+<script>
+var S=appifactEmbed.settings({minutes:5,increment:0},function(s){S=s;if(!d.started){reset();}else{draw();}});
+var d=appifactEmbed.load()||null;
+function fresh(){return {t:[S.minutes*60000,S.minutes*60000],moves:[0,0],turn:-1,running:false,since:0,started:false,out:-1}}
+if(!d)d=fresh();
+function left(i){return d.running&&d.turn===i?d.t[i]-(Date.now()-d.since):d.t[i]}
+function fmt(ms){ms=Math.max(0,ms);var s=Math.ceil(ms/1000),m=Math.floor(s/60);s%=60;if(ms<10000&&ms>0)return (ms/1000).toFixed(1);return m+":"+(s<10?"0":"")+s}
+function save(){appifactEmbed.save(d)}
+function draw(){
+  ["a","b"].forEach(function(id,i){
+    var el=document.getElementById(id);el.className="side"+(i===0?" top":"")+(d.out===i?" out":(d.turn===i&&d.started?" act":""));
+    document.getElementById("t"+id).textContent=fmt(left(i));
+    document.getElementById("m"+id).textContent=d.out===i?"Time's up":(d.started?"Moves: "+d.moves[i]:"Tap to start the other clock");
+  });
+  document.getElementById("pp").textContent=d.running?"Pause":(d.started&&d.out<0?"Resume":"Pause");
+  document.getElementById("info").textContent=S.minutes+" min"+(S.increment?" +"+S.increment+"s":"");
+}
+function tap(i){
+  if(d.out>=0)return;
+  if(d.started&&d.turn!==i)return;           // only the player whose clock is running can tap
+  if(d.started&&d.running){d.t[i]=left(i)+S.increment*1000;d.moves[i]++}
+  d.turn=1-i;d.started=true;d.running=true;d.since=Date.now();
+  playClick(i===0?1:0.85,1);save();draw();
+}
+function tick(){
+  if(d.running){var i=d.turn;if(left(i)<=0){d.t[i]=0;d.running=false;d.out=i;save();playClick(0.6,1);}}
+  draw();
+}
+function reset(){d=fresh();save();draw()}
+document.getElementById("a").addEventListener("click",function(){tap(0)});
+document.getElementById("b").addEventListener("click",function(){tap(1)});
+document.getElementById("pp").onclick=function(){
+  if(!d.started||d.out>=0)return;
+  if(d.running){d.t[d.turn]=left(d.turn);d.running=false}else{d.running=true;d.since=Date.now()}
+  playClick(1.2,.5);save();draw();
+};
+document.getElementById("rs").onclick=function(){playClick(0.6,.9);reset()};
+appifactEmbed.onLoad(function(v){if(v){d=v;draw()}});
+setInterval(tick,100);draw();
+</script>

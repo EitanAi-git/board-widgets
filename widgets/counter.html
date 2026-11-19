@@ -6,6 +6,7 @@ document.documentElement.style.background="#1c1c1e";
 var c=0;
 var on=true;
 var ac=null;
+var S=appifactEmbed.settings({step:1});
 var d=appifactEmbed.load();
 if(d&&typeof d.count==="number")c=d.count;
 // Click sampled from a real button. Lower buttons play it slower, which pitches it down.
@@ -33,14 +34,15 @@ function wire(id,rate,vol){
 document.addEventListener("pointerdown",function(){var a=getAC();if(a)loadClick(a);},{capture:true,once:true});
 function show(){document.getElementById("n").textContent=c;}
 function upd(v){c=v;show();appifactEmbed.save({count:c});}
-document.getElementById("p").onclick=function(){upd(c+1);};
-document.getElementById("m").onclick=function(){upd(c-1);};
+document.getElementById("p").onclick=function(){upd(c+(+S.step||1));};
+document.getElementById("m").onclick=function(){upd(c-(+S.step||1));};
 document.getElementById("r").onclick=function(){upd(0);};
 document.getElementById("s").onclick=function(){
   on=!on;
   this.textContent="Sound: "+(on?"on":"off");
 };
 wire("p",1,1);wire("m",0.75,1);wire("r",0.6,0.9);wire("s",1.2,0.5);
+window.addEventListener("storage",function(e){if(e.key&&e.key.indexOf("settings:")===0)S=appifactEmbed.settings({step:1});});
 appifactEmbed.onLoad(function(x){if(x&&typeof x.count==="number"){c=x.count;show();}});
 show();
 </script>

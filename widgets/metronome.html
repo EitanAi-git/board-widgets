@@ -1,0 +1,53 @@
+<!doctype html><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><script src="../shim.js"></script><script src="../click.js"></script>
+<title>Metronome</title>
+<style>
+  html,body{margin:0;height:100%;background:#1c1c1e;font-family:system-ui,sans-serif;color:#f2f2f2;overflow:hidden;user-select:none;-webkit-user-select:none}
+  body{padding:14px 16px;box-sizing:border-box;text-align:center}
+  h3{margin:0;font-size:16px;text-align:left}
+  .dots{display:flex;justify-content:center;gap:10px;margin:12px 0 4px}
+  .dots i{width:16px;height:16px;border-radius:50%;background:#3a3a3e;transition:background .05s}
+  .dots i.on{background:#f2f2f2}.dots i.on.acc{background:#D97757}
+  .bpm{display:flex;align-items:center;justify-content:center;gap:14px}
+  .bpm b{font-size:56px;font-weight:800;font-variant-numeric:tabular-nums;min-width:110px}
+  .bpm button{width:44px;height:44px;border-radius:12px;border:1px solid #555;background:#2c2c2e;color:#f2f2f2;font-size:22px;cursor:pointer}
+  .u{font-size:12px;color:#aaa;margin-top:-4px}
+  input[type=range]{width:100%;margin:12px 0;accent-color:#D97757}
+  .row{display:flex;gap:10px;justify-content:center}
+  .row button{font:600 15px system-ui,sans-serif;padding:10px 18px;border-radius:12px;cursor:pointer;border:1px solid #555;background:#2c2c2e;color:#f2f2f2}
+  #go{border:0;background:#D97757;color:#fff;min-width:90px}
+</style>
+<h3>Metronome</h3>
+<div class="dots" id="dots"></div>
+<div class="bpm"><button id="dn" type="button">−</button><b id="v">100</b><button id="up" type="button">+</button></div>
+<div class="u">BPM</div>
+<input type="range" id="sl" min="30" max="240" aria-label="Tempo">
+<div class="row"><button id="go" type="button">Start</button><button id="tap" type="button">Tap tempo</button></div>
+<script>
+var S=appifactEmbed.settings({beats:4,accent:"yes"},function(s){S=s;beat=0;dots()});
+var d=Object.assign({bpm:100},appifactEmbed.load());
+var running=false,next=0,beat=0,tid=0,taps=[],queue=[];
+function dots(){var el=document.getElementById("dots");el.textContent="";for(var i=0;i<(+S.beats||4);i++){var e=document.createElement("i");if(i===0&&S.accent==="yes")e.className="acc";el.appendChild(e)}}
+function setBpm(v){d.bpm=Math.max(30,Math.min(240,Math.round(v)));document.getElementById("v").textContent=d.bpm;document.getElementById("sl").value=d.bpm;appifactEmbed.save(d)}
+// Look-ahead scheduler: queue clicks slightly ahead on the audio clock so timing stays steady
+function schedule(){
+  var a=clickAudio();if(!a)return;
+  while(next<a.currentTime+0.12){
+    var n=+S.beats||4,first=beat%n===0,acc=first&&S.accent==="yes";
+    playClick(acc?1.25:1,acc?1:.8,next);queue.push({t:next,b:beat%n});
+    next+=60/d.bpm;beat++;
+  }
+  var now=a.currentTime;while(queue.length&&queue[0].t<=now){var q=queue.shift();var ds=document.querySelectorAll("#dots i");ds.forEach(function(e,i){e.classList.toggle("on",i===q.b)})}
+}
+function start(){var a=clickAudio();if(!a)return;
+  if(!clickReady()){setTimeout(start,60);return}   // wait for the sound to decode on the first start
+  running=true;beat=0;queue=[];next=a.currentTime+0.06;tid=setInterval(schedule,25);document.getElementById("go").textContent="Stop"}
+function stop(){running=false;clearInterval(tid);document.querySelectorAll("#dots i").forEach(function(e){e.classList.remove("on")});document.getElementById("go").textContent="Start"}
+document.getElementById("go").onclick=function(){running?stop():start()};
+document.getElementById("dn").onclick=function(){setBpm(d.bpm-1)};
+document.getElementById("up").onclick=function(){setBpm(d.bpm+1)};
+document.getElementById("sl").oninput=function(e){setBpm(+e.target.value)};
+document.getElementById("tap").onclick=function(){var t=performance.now();taps=taps.filter(function(x){return t-x<2500});taps.push(t);
+  if(taps.length>1){var g=(taps[taps.length-1]-taps[0])/(taps.length-1);setBpm(60000/g)}playClick(1.1,.6)};
+appifactEmbed.onLoad(function(v){if(v&&v.bpm)setBpm(v.bpm)});
+dots();setBpm(d.bpm);
+</script>

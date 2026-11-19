@@ -1,0 +1,50 @@
+<!doctype html><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><script src="../shim.js"></script><script src="../click.js"></script>
+<title>Habit tracker</title>
+<style>
+  html,body{margin:0;height:100%;background:#1c1c1e;font-family:system-ui,sans-serif;color:#f2f2f2;overflow:hidden}
+  body{padding:14px 16px;box-sizing:border-box}
+  .top{display:flex;justify-content:space-between;align-items:baseline}
+  h3{margin:0;font-size:16px}#streak{font-size:13px;color:#D97757;font-weight:700}
+  .mid{display:flex;align-items:center;gap:16px;margin:10px 0}
+  svg{flex:none}
+  .cnt{font-size:34px;font-weight:800;line-height:1}.of{font-size:13px;color:#aaa;margin-top:4px}
+  .btns{display:flex;gap:8px;margin-top:10px}
+  button{font:600 15px system-ui,sans-serif;border-radius:12px;cursor:pointer}
+  #add{padding:10px 18px;border:0;background:#D97757;color:#fff}#sub{padding:10px 14px;border:1px solid #555;background:#2c2c2e;color:#f2f2f2}
+  .week{display:flex;gap:6px;align-items:flex-end;height:70px;margin-top:6px}
+  .day{flex:1;display:flex;flex-direction:column;align-items:center;gap:4px;height:100%;justify-content:flex-end}
+  .day i{display:block;width:100%;border-radius:6px 6px 3px 3px;background:#3a3a3e;min-height:4px}
+  .day i.met{background:#D97757}.day span{font-size:10px;color:#888}
+</style>
+<div class="top"><h3 id="name"></h3><span id="streak"></span></div>
+<div class="mid">
+  <svg width="110" height="110" viewBox="0 0 110 110"><circle cx="55" cy="55" r="46" fill="none" stroke="#2c2c2e" stroke-width="12"/><circle id="ring" cx="55" cy="55" r="46" fill="none" stroke="#D97757" stroke-width="12" stroke-linecap="round" transform="rotate(-90 55 55)" stroke-dasharray="289" stroke-dashoffset="289"/></svg>
+  <div><div class="cnt" id="cnt">0</div><div class="of" id="of"></div><div class="btns"><button id="add" type="button">+1</button><button id="sub" type="button">−</button></div></div>
+</div>
+<div class="week" id="week"></div>
+<script>
+var S=appifactEmbed.settings({name:"Water",unit:"glasses",goal:8},function(s){S=s;draw()});
+var d=Object.assign({days:{}},appifactEmbed.load());
+function key(dt){return dt.getFullYear()+"-"+String(dt.getMonth()+1).padStart(2,"0")+"-"+String(dt.getDate()).padStart(2,"0")}
+function back(n){var t=new Date();t.setDate(t.getDate()-n);return t}
+function streak(){var n=0,i=(d.days[key(back(0))]||0)>=S.goal?0:1;for(;;i++){if((d.days[key(back(i))]||0)>=S.goal)n++;else break}return n}
+function draw(){
+  var today=d.days[key(back(0))]||0,goal=Math.max(1,+S.goal||1);
+  document.getElementById("name").textContent=S.name;
+  document.getElementById("cnt").textContent=today;
+  document.getElementById("of").textContent="of "+goal+" "+S.unit+" today";
+  document.getElementById("ring").style.strokeDashoffset=289*(1-Math.min(1,today/goal));
+  var s=streak();document.getElementById("streak").textContent=s?"🔥 "+s+" day streak":"";
+  var w=document.getElementById("week");w.textContent="";
+  for(var i=6;i>=0;i--){var dt=back(i),v=d.days[key(dt)]||0,c=document.createElement("div");c.className="day";
+    var bar=document.createElement("i");bar.style.height=Math.min(100,v/goal*100)+"%";if(v>=goal)bar.className="met";
+    var l=document.createElement("span");l.textContent=i===0?"Today":"SMTWTFS"[dt.getDay()];c.append(bar,l);w.appendChild(c)}
+}
+function bump(n){var k=key(back(0));d.days[k]=Math.max(0,(d.days[k]||0)+n);
+  var ks=Object.keys(d.days).sort();if(ks.length>60)ks.slice(0,ks.length-60).forEach(function(x){delete d.days[x]}); // keep 2 months
+  appifactEmbed.save(d);draw()}
+document.getElementById("add").onclick=function(){playClick(1,1);bump(1)};
+document.getElementById("sub").onclick=function(){playClick(.75,1);bump(-1)};
+appifactEmbed.onLoad(function(v){if(v){d=v;draw()}});
+draw();setInterval(draw,60000);
+</script>

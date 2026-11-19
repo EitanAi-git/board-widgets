@@ -1,0 +1,32 @@
+<!doctype html><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><script src="../shim.js"></script>
+<title>Reaction test</title>
+<style>
+  html,body{margin:0;height:100%;font-family:system-ui,sans-serif;color:#fff;overflow:hidden;user-select:none;-webkit-user-select:none;background:#1c1c1e}
+  .wrap{display:flex;flex-direction:column;height:100%}
+  #pad{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;cursor:pointer;background:#2c2c2e;transition:background .05s;touch-action:manipulation;padding:10px}
+  #pad.wait{background:#a83232}#pad.go{background:#2E8B57}#pad.res{background:#2F7CC4}
+  #big{font-size:40px;font-weight:800}#small{font-size:14px;opacity:.85;margin-top:6px}
+  .bar{display:flex;gap:8px;padding:8px;background:#1c1c1e;font-size:12px;color:#ccc;align-items:center}
+  .bar b{color:#fff}.bar button{margin-left:auto;font:600 12px system-ui,sans-serif;padding:6px 12px;border-radius:8px;border:1px solid #555;background:#2c2c2e;color:#f2f2f2;cursor:pointer}
+</style>
+<div class="wrap">
+  <div id="pad"><div id="big">Tap to start</div><div id="small">Wait for green, then tap as fast as you can</div></div>
+  <div class="bar">Best <b id="best">–</b> · Avg of last 5 <b id="avg">–</b><button id="rs" type="button">Reset</button></div>
+</div>
+<script>
+var d=Object.assign({best:0,last:[]},appifactEmbed.load()),st="idle",timer=0,t0=0;
+var pad=document.getElementById("pad"),big=document.getElementById("big"),small=document.getElementById("small");
+function stats(){document.getElementById("best").textContent=d.best?d.best+" ms":"–";document.getElementById("avg").textContent=d.last.length?Math.round(d.last.reduce(function(a,b){return a+b},0)/d.last.length)+" ms":"–"}
+function show(cls,b,s){pad.className=cls;big.textContent=b;small.textContent=s}
+function start(){st="wait";show("wait","Wait…","Tap when it turns green");timer=setTimeout(function(){st="go";t0=performance.now();show("go","TAP!","")},1500+Math.random()*2500)}
+pad.addEventListener("pointerdown",function(){
+  if(st==="idle"||st==="res"||st==="early"){start();return}
+  if(st==="wait"){clearTimeout(timer);st="early";show("","Too soon!","Tap to try again");return}
+  if(st==="go"){var ms=Math.round(performance.now()-t0);st="res";
+    d.last.push(ms);d.last=d.last.slice(-5);if(!d.best||ms<d.best)d.best=ms;appifactEmbed.save(d);stats();
+    show("res",ms+" ms",ms<200?"Lightning fast!":ms<260?"Great":ms<330?"Good":"Keep practising");}
+});
+document.getElementById("rs").onclick=function(){d={best:0,last:[]};appifactEmbed.save(d);stats()};
+appifactEmbed.onLoad(function(v){if(v){d=v;stats()}});
+stats();
+</script>
