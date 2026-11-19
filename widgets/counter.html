@@ -8,31 +8,31 @@ var on=true;
 var ac=null;
 var d=appifactEmbed.load();
 if(d&&typeof d.count==="number")c=d.count;
-function tone(f1,f2,dur,type,vol){
+// Short mechanical click: a tiny burst of filtered noise, no ringing tone
+function click(freq,vol,dur){
   if(!on)return;
   try{
     if(!ac){var AC=window.AudioContext||window.webkitAudioContext;if(!AC)return;ac=new AC();}
     if(ac.state==="suspended")ac.resume();
-    var o=ac.createOscillator();var g=ac.createGain();
-    var t=ac.currentTime;
-    o.type=type;
-    o.frequency.setValueAtTime(f1,t);
-    o.frequency.exponentialRampToValueAtTime(f2,t+dur);
-    g.gain.setValueAtTime(vol,t);
-    g.gain.exponentialRampToValueAtTime(0.001,t+dur);
-    o.connect(g);g.connect(ac.destination);
-    o.start(t);o.stop(t+dur+0.02);
+    var t=ac.currentTime,n=Math.floor(ac.sampleRate*dur);
+    var buf=ac.createBuffer(1,n,ac.sampleRate),data=buf.getChannelData(0);
+    for(var i=0;i<n;i++)data[i]=(Math.random()*2-1)*Math.pow(1-i/n,4);
+    var src=ac.createBufferSource();src.buffer=buf;
+    var f=ac.createBiquadFilter();f.type="bandpass";f.frequency.value=freq;f.Q.value=1.2;
+    var g=ac.createGain();g.gain.value=vol;
+    src.connect(f);f.connect(g);g.connect(ac.destination);
+    src.start(t);
   }catch(e){}
 }
 function show(){document.getElementById("n").textContent=c;}
 function upd(v){c=v;show();appifactEmbed.save({count:c});}
-document.getElementById("p").onclick=function(){tone(660,990,0.12,"triangle",0.25);upd(c+1);};
-document.getElementById("m").onclick=function(){tone(360,210,0.12,"triangle",0.25);upd(c-1);};
-document.getElementById("r").onclick=function(){tone(800,120,0.35,"sawtooth",0.15);upd(0);};
+document.getElementById("p").onclick=function(){click(3200,0.9,0.018);upd(c+1);};
+document.getElementById("m").onclick=function(){click(1900,0.9,0.018);upd(c-1);};
+document.getElementById("r").onclick=function(){click(1200,0.8,0.03);upd(0);};
 document.getElementById("s").onclick=function(){
   on=!on;
   this.textContent="Sound: "+(on?"on":"off");
-  tone(520,780,0.1,"sine",0.2);
+  click(2500,0.6,0.012);
 };
 appifactEmbed.onLoad(function(x){if(x&&typeof x.count==="number"){c=x.count;show();}});
 show();
