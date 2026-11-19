@@ -13,13 +13,22 @@
   html,body{margin:0;min-height:100%}
   body{background:#121214;background-image:radial-gradient(#2a2a2e 1.2px,transparent 1.2px);background-size:24px 24px;font-family:sans-serif;overflow-x:hidden}
   #wrap{position:relative;margin:0 auto;transform-origin:top left}
-  .card{position:absolute;border-radius:14px;overflow:hidden;box-shadow:0 0 0 1px #2c2c2e,0 4px 14px rgba(0,0,0,.5);background:#1c1c1e}
-  .card iframe{display:block;width:100%;height:100%;border:0}
-  .open{position:absolute;top:6px;right:8px;z-index:2;font-size:12px;color:#aaa;text-decoration:none;background:rgba(28,28,30,.85);padding:2px 6px;border-radius:6px}
+  .card{position:absolute;border-radius:14px;overflow:hidden;box-shadow:0 0 0 1px #2c2c2e,0 4px 14px rgba(0,0,0,.5);background:#1c1c1e;cursor:pointer;transition:transform .15s,box-shadow .15s}
+  .card:hover{box-shadow:0 0 0 2px #D97757,0 6px 18px rgba(0,0,0,.6)}
+  .card:active{transform:scale(.97)}
+  /* Tiles are previews: taps go to the card, which opens the full-screen version */
+  .card iframe{display:block;width:100%;height:100%;border:0;pointer-events:none}
+  #full{position:fixed;inset:0;z-index:10;background:#1c1c1e;display:none;flex-direction:column}
+  #full.on{display:flex;animation:pop .18s ease-out}
+  @keyframes pop{from{opacity:0;transform:scale(.96)}to{opacity:1;transform:none}}
+  #bar{display:flex;align-items:center;justify-content:space-between;padding:10px 14px;padding-top:max(10px,env(safe-area-inset-top));color:#f2f2f2;font-size:16px;font-weight:700}
+  #x{font-size:20px;width:40px;height:40px;border-radius:12px;border:1px solid #555;background:#2c2c2e;color:#f2f2f2;cursor:pointer}
+  #ff{flex:1;width:100%;border:0;display:block}
 </style>
 </head>
 <body>
 <div id="wrap"></div>
+<div id="full"><div id="bar"><span id="name"></span><button id="x" type="button" aria-label="Close">✕</button></div><iframe id="ff" title=""></iframe></div>
 <script>
 // Same positions and sizes as on the whiteboard
 var W=[
@@ -35,14 +44,35 @@ var BW=maxX-minX+PAD*2,BH=maxY-minY+PAD*2;
 var wrap=document.getElementById("wrap");
 wrap.style.width=BW+"px";wrap.style.height=BH+"px";
 W.forEach(function(w){
-  var c=document.createElement("div");c.className="card";
+  var c=document.createElement("div");c.className="card";c.setAttribute("role","button");c.setAttribute("aria-label","Open "+w[1]+" full screen");
   c.style.left=(w[2]-minX+PAD)+"px";c.style.top=(w[3]-minY+PAD)+"px";c.style.width=w[4]+"px";c.style.height=w[5]+"px";
-  var a=document.createElement("a");a.className="open";a.href="widgets/"+w[0]+".html";a.textContent="↗";a.title="Open "+w[1];
-  var f=document.createElement("iframe");f.src=a.href;f.title=w[1];
-  c.append(a,f);wrap.appendChild(c);
+  var f=document.createElement("iframe");f.src="widgets/"+w[0]+".html";f.title=w[1];f.tabIndex=-1;
+  c.appendChild(f);c.onclick=function(){openFull(w)};wrap.appendChild(c);
 });
 function fit(){var s=Math.min(1,document.documentElement.clientWidth/BW);wrap.style.transform="scale("+s+")";wrap.style.marginLeft=s<1?"0":"auto";document.body.style.height=(BH*s)+"px"}
 window.addEventListener("resize",fit);fit();
+
+// Full-screen version
+var full=document.getElementById("full"),ff=document.getElementById("ff"),isOpen=false;
+function openFull(w){
+  document.getElementById("name").textContent=w[1];
+  ff.title=w[1];
+  ff.src="widgets/"+w[0]+".html?full=1&w="+w[4]+"&h="+w[5];
+  full.classList.add("on");isOpen=true;
+  document.body.style.overflow="hidden";
+  history.pushState({full:1},"");
+  if(full.requestFullscreen)full.requestFullscreen().catch(function(){});
+}
+function closeFull(fromHistory){
+  if(!isOpen)return;isOpen=false;
+  full.classList.remove("on");ff.src="about:blank";document.body.style.overflow="";
+  if(document.fullscreenElement&&document.exitFullscreen)document.exitFullscreen().catch(function(){});
+  if(!fromHistory&&history.state&&history.state.full)history.back();
+}
+document.getElementById("x").onclick=function(){closeFull(false)};
+window.addEventListener("popstate",function(){closeFull(true)});            // phone back button
+document.addEventListener("keydown",function(e){if(e.key==="Escape")closeFull(false)});
+
 if("serviceWorker" in navigator)navigator.serviceWorker.register("sw.js");
 </script>
 </body>
