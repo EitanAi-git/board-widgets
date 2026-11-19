@@ -26,9 +26,8 @@ function button(rate,vol){
   }catch(e){}
 }
 function wire(id,rate,vol){
-  var el=document.getElementById(id);
-  el.addEventListener("pointerdown",function(){button(rate,vol);});
-  el.addEventListener("click",function(e){if(e.detail===0)button(rate,vol);}); // keyboard
+  // Play when the finger lifts (the click event), like a real button releasing
+  document.getElementById(id).addEventListener("click",function(){button(rate,vol);});
 }
 // Decode the click as soon as the page is touched, so the first tap already sounds
 document.addEventListener("pointerdown",function(){var a=getAC();if(a)loadClick(a);},{capture:true,once:true});
