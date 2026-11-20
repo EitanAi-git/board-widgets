@@ -34,7 +34,7 @@
   };
   // Full-screen version (?full=1&w=..&h=..): scale the widget up to fill the screen, centred.
   var q = new URLSearchParams(location.search);
-  if (q.has("full")) {
+  if (q.has("full") && !document.querySelector('meta[name="fluid"]')) {
     var bw = +q.get("w") || 340, bh = +q.get("h") || 340;
     var fit = function () {
       var vw = window.innerWidth, vh = window.innerHeight;

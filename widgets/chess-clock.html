@@ -1,4 +1,4 @@
-<!doctype html><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><style>html,*{-webkit-tap-highlight-color:rgba(0,0,0,0)!important}:focus:not(:focus-visible){outline:none}</style><script src="../shim.js?v=16"></script><script src="../click.js?v=16"></script>
+<!doctype html><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="fluid" content="1"><style>html,*{-webkit-tap-highlight-color:rgba(0,0,0,0)!important}:focus:not(:focus-visible){outline:none}</style><script src="../shim.js?v=16"></script><script src="../click.js?v=16"></script>
 <title>Chess clock</title>
 <style>
   html,body{margin:0;height:100%;background:#1c1c1e;font-family:system-ui,sans-serif;color:#f2f2f2;overflow:hidden;user-select:none;-webkit-user-select:none}
@@ -7,11 +7,18 @@
   .side.top{transform:rotate(180deg)}
   .side.act{background:#D97757;color:#fff}
   .side.out{background:#8a2b2b;color:#fff}
-  .t{font-size:64px;font-weight:800;font-variant-numeric:tabular-nums;line-height:1}
-  .m{font-size:13px;opacity:.75;margin-top:6px}
+  .t{font-size:clamp(40px,17vmin,140px);font-weight:800;font-variant-numeric:tabular-nums;line-height:1}
+  .m{font-size:clamp(12px,3.4vmin,18px);opacity:.75;margin-top:6px}
   .bar{display:flex;justify-content:center;gap:10px;padding:8px;background:#1c1c1e}
   .bar button{font:600 14px system-ui,sans-serif;padding:8px 14px;border-radius:10px;border:1px solid #555;background:#2c2c2e;color:#f2f2f2;cursor:pointer}
   .bar span{align-self:center;font-size:12px;color:#888}
+  /* Sideways: players left and right, both clocks upright, controls in a column between them */
+  @media (min-aspect-ratio:5/4){
+    .wrap{flex-direction:row}
+    .side.top{transform:none}
+    .bar{flex-direction:column;justify-content:center;padding:8px 6px}
+    .bar span{writing-mode:vertical-rl;transform:rotate(180deg)}
+  }
 </style>
 <div class="wrap">
   <div class="side top" id="a"><div class="t" id="ta"></div><div class="m" id="ma"></div></div>
