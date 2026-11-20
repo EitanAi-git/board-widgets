@@ -1,0 +1,46 @@
+<!doctype html><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><script src="../shim.js"></script><script src="../click.js"></script>
+<title>Light switch</title>
+<style>
+  /* Lights up this tile only; the app stays dark. */
+  html,body{margin:0;height:100%;background:#1c1c1e;font-family:system-ui,sans-serif;color:#f2f2f2;overflow:hidden;user-select:none;-webkit-user-select:none}
+  .room{position:relative;height:100%;display:flex;flex-direction:column;align-items:center;justify-content:space-between;padding:14px 0 16px;box-sizing:border-box;transition:background .25s}
+  .glow{position:absolute;left:50%;top:0;width:340px;height:300px;transform:translate(-50%,-35%);border-radius:50%;background:radial-gradient(var(--lc) 0%,transparent 65%);opacity:0;transition:opacity .25s;pointer-events:none}
+  .on .glow{opacity:.35}
+  .bulb{position:relative;width:54px;height:54px;border-radius:50%;background:#3a3a3e;transition:background .2s,box-shadow .2s}
+  .bulb::after{content:"";position:absolute;left:17px;top:48px;width:20px;height:14px;border-radius:0 0 5px 5px;background:#55555a}
+  .on .bulb{background:var(--lc);box-shadow:0 0 30px 8px var(--lc)}
+  .plate{width:110px;height:160px;border-radius:14px;background:#2c2c2e;box-shadow:0 0 0 1px #3a3a3e,0 6px 14px rgba(0,0,0,.5);display:flex;align-items:center;justify-content:center;position:relative}
+  .plate i{position:absolute;left:50%;width:7px;height:7px;margin-left:-3.5px;border-radius:50%;background:#1c1c1e}
+  .plate i:first-child{top:10px}.plate i:last-child{bottom:10px}
+  .rocker{width:56px;height:96px;border-radius:10px;background:#3a3a40;cursor:pointer;touch-action:manipulation;position:relative;overflow:hidden;
+          box-shadow:inset 0 -26px 0 #2e2e33,0 2px 0 #151517;transition:box-shadow .08s}
+  .on .rocker{box-shadow:inset 0 26px 0 #2e2e33,0 2px 0 #151517}
+  .rocker b{position:absolute;left:0;right:0;text-align:center;font-size:10px;font-weight:800;color:#77777d}
+  .rocker b.t{top:10px}.rocker b.u{bottom:10px}
+  .on .rocker b.t{color:var(--lc)}
+  .meta{font-size:12px;color:#999}
+</style>
+<div class="room" id="room"><div class="glow"></div>
+  <div class="bulb"></div>
+  <div class="plate"><i></i><div class="rocker" id="sw" role="switch" aria-checked="false" aria-label="Light switch"><b class="t">ON</b><b class="u">OFF</b></div><i></i></div>
+  <div class="meta" id="meta"></div>
+</div>
+<script>
+var COL={warm:"#ffcf7a",white:"#f4f7ff",pink:"#ff8fc7",green:"#7dffa8",blue:"#7fc6ff"};
+var S=appifactEmbed.settings({color:"warm"},function(s){S=s;draw()});
+var d=Object.assign({on:false,flips:0},appifactEmbed.load());
+var room=document.getElementById("room"),sw=document.getElementById("sw");
+function draw(){
+  room.style.setProperty("--lc",COL[S.color]||COL.warm);
+  room.classList.toggle("on",d.on);sw.setAttribute("aria-checked",d.on);
+  document.getElementById("meta").textContent="Flipped "+d.flips+" time"+(d.flips===1?"":"s");
+}
+sw.addEventListener("click",function(){
+  d.on=!d.on;d.flips++;
+  // snap of the rocker: sampled click pitched down plus a short plastic thud
+  playClick(d.on?0.7:0.62,1);playRing([[180,0.012,0.6,0.0015],[850,0.005,0.35,0.0008]],0.7);buzz(10);
+  appifactEmbed.save(d);draw();
+});
+appifactEmbed.onLoad(function(v){if(v){d=v;draw()}});
+draw();
+</script>

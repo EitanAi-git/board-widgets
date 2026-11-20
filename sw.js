@@ -1,5 +1,5 @@
 // Caches every page so the installed app opens offline. Bump VERSION after changing files.
-var VERSION = "v12";
+var VERSION = "v14";
 var FILES = [
   "./", "index.html", "shim.js", "click.js", "manifest.webmanifest",
   "icons/icon-192.png", "icons/icon-512.png", "icons/maskable-512.png",
@@ -8,7 +8,8 @@ var FILES = [
   "widgets/mood-check-in.html", "widgets/dice.html", "widgets/coin-flip.html", "widgets/random-picker.html",
   "widgets/spinning-wheel.html", "widgets/team-shuffler.html", "widgets/rock-paper-scissors.html",
   "widgets/chess-clock.html", "widgets/tally.html", "widgets/reaction.html",
-  "widgets/metronome.html", "widgets/habit.html", "widgets/decibel.html"
+  "widgets/metronome.html", "widgets/habit.html", "widgets/decibel.html",
+  "widgets/spinner.html", "widgets/key-clicker.html", "widgets/light-switch.html"
 ];
 
 self.addEventListener("install", function (e) {

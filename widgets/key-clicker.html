@@ -1,0 +1,47 @@
+<!doctype html><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><script src="../shim.js"></script><script src="../click.js"></script>
+<title>Key clicker</title>
+<style>
+  html,body{margin:0;height:100%;background:#1c1c1e;font-family:system-ui,sans-serif;color:#f2f2f2;overflow:hidden;user-select:none;-webkit-user-select:none}
+  .wrap{display:flex;flex-direction:column;height:100%;align-items:center;justify-content:center;gap:16px}
+  .plate{padding:14px;border-radius:22px;background:#111113;box-shadow:inset 0 2px 6px rgba(0,0,0,.8)}
+  .key{position:relative;width:150px;height:150px;border-radius:18px;background:#3a3a40;cursor:pointer;touch-action:manipulation;
+       box-shadow:0 10px 0 #232327,0 12px 14px rgba(0,0,0,.6);transition:transform .045s,box-shadow .045s}
+  .key::after{content:"";position:absolute;inset:14px 18px 22px;border-radius:12px;background:linear-gradient(#4a4a52,#3d3d44);box-shadow:inset 0 1px 0 rgba(255,255,255,.08)}
+  .key span{position:absolute;left:28px;top:24px;z-index:1;font-size:16px;font-weight:700;color:#D97757}
+  .key.down{transform:translateY(8px);box-shadow:0 2px 0 #232327,0 3px 5px rgba(0,0,0,.6)}
+  .stats{display:flex;gap:28px;font-size:11px;color:#999;text-align:center}
+  .stats b{display:block;font-size:20px;color:#f2f2f2;font-variant-numeric:tabular-nums}
+</style>
+<div class="wrap">
+  <div class="plate"><div class="key" id="k" role="button" aria-label="Press the key"><span id="lbl">Esc</span></div></div>
+  <div class="stats"><div><b id="n">0</b>Presses</div><div><b id="cps">0</b>Per second</div><div><b id="best">0</b>Best / sec</div></div>
+</div>
+<script>
+var S=appifactEmbed.settings({sw:"clicky",label:"Esc"},function(s){S=s;document.getElementById("lbl").textContent=S.label});
+var d=Object.assign({n:0,best:0},appifactEmbed.load()),times=[],down=false;
+var k=document.getElementById("k");document.getElementById("lbl").textContent=S.label;
+// Each switch type: what the press and the release sound like
+function press(){
+  if(S.sw==="clicky"){playClick(1.35,0.9);playRing([[320,0.012,0.6,0.0012],[1300,0.004,0.35,0.0008]],0.8)}
+  else if(S.sw==="tactile"){playRing([[280,0.014,0.7,0.0015],[1100,0.005,0.4,0.001],[2600,0.0015,0.25,0.0004]],0.9)}
+  else playRing([[240,0.016,0.8,0.0018],[900,0.006,0.3,0.001]],0.9);
+  buzz(6);
+}
+function release(){
+  if(S.sw==="clicky"){playClick(1.6,0.45);playRing([[1700,0.003,0.5,0.0005]],0.35)}
+  else if(S.sw==="tactile")playRing([[1500,0.004,0.5,0.0006],[400,0.008,0.3,0.001]],0.4);
+  else playRing([[1200,0.005,0.4,0.0008],[350,0.01,0.4,0.001]],0.35);
+}
+function draw(){
+  var now=performance.now();times=times.filter(function(t){return now-t<1000});
+  document.getElementById("n").textContent=d.n;document.getElementById("cps").textContent=times.length;document.getElementById("best").textContent=d.best;
+}
+function goDown(){if(down)return;down=true;k.classList.add("down");press();d.n++;times.push(performance.now());draw();if(times.length>d.best)d.best=times.length;appifactEmbed.save(d)}
+function goUp(){if(!down)return;down=false;k.classList.remove("down");release()}
+k.addEventListener("pointerdown",function(e){k.setPointerCapture(e.pointerId);goDown()});
+k.addEventListener("pointerup",goUp);k.addEventListener("pointercancel",goUp);
+document.addEventListener("keydown",function(e){if(e.repeat)return;if(e.key===" "||e.key==="Enter"){e.preventDefault();goDown()}});
+document.addEventListener("keyup",function(e){if(e.key===" "||e.key==="Enter")goUp()});
+appifactEmbed.onLoad(function(v){if(v){d=v;draw()}});
+setInterval(draw,250);draw();
+</script>

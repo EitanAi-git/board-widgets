@@ -17,6 +17,7 @@
   .card{position:absolute;border-radius:14px;overflow:hidden;box-shadow:0 0 0 1px var(--raise),0 4px 14px rgba(0,0,0,.5);background:var(--card);cursor:pointer;transition:transform .15s,box-shadow .15s}
   .card:hover{box-shadow:0 0 0 2px var(--accent),0 6px 18px rgba(0,0,0,.6)}
   .card:active{transform:scale(.97)}
+  .sec{position:absolute;font-size:28px;font-weight:800;color:#f2f2f2;letter-spacing:-.01em}
   .card iframe{display:block;width:100%;height:100%;border:0;pointer-events:none}
 
   /* Details sheet */
@@ -120,10 +121,14 @@ var W=[
   ["reaction","Reaction test",420,1560,340,340,"Games","⚡","Any",1,"Wait for green, then tap as fast as you can. Compare times with friends.",["Tap to start, then wait for green.","Tapping on red counts as too soon.","Your best and the average of your last 5 are saved."]],
   ["metronome","Metronome",-340,1940,340,340,"Time","🥁","Any",1,"A steady click from 30 to 240 BPM, using the same button sound as the counter.",["Use − / + or the slider to set the tempo.","Tap tempo: tap along a few times to match a song.","Beats per bar and the accent are in Settings."],[["beats","Beats per bar","select",4,[2,3,4,5,6,7]],["accent","Accent the first beat","select","yes",["yes","no"]]]],
   ["habit","Habit tracker",40,1940,340,340,"Tools","💧","1",1,"Set a daily goal and build a streak. Starts as a water tracker; rename it to anything.",["Tap +1 each time you do it.","Hit the goal each day to grow your streak.","The bars show the last 7 days."],[["name","Habit name","text","Water"],["unit","Unit","text","glasses"],["goal","Daily goal","number",8]]],
-  ["decibel","Decibel meter",420,1940,340,340,"Tools","🔊","Any",0,"Shows roughly how loud the room is, using the microphone.",["Tap Start and allow the microphone.","Watch the average and the peak.","Readings are approximate; phone mics aren't calibrated."]]
+  ["decibel","Decibel meter",420,1940,340,340,"Tools","🔊","Any",0,"Shows roughly how loud the room is, using the microphone.",["Tap Start and allow the microphone.","Watch the average and the peak.","Readings are approximate; phone mics aren't calibrated."]],
+  ["spinner","Fidget spinner",-340,2400,340,340,"Fidget","🌀","1",1,"Flick it and watch it go. It clicks on every notch, faster as it speeds up.",["Drag around the middle and let go to fling it.","A quick tap gives it a push.","Notches per turn and how long it spins are in Settings."],[["ticks","Clicks per turn","select",12,[6,12,24]],["spin","Spin length","select","long",["long","medium","short"]]]],
+  ["key-clicker","Key clicker",40,2400,340,340,"Fidget","⌨️","1",1,"One mechanical keyboard key to press as much as you like, with a press and a release sound.",["Press and hold to hear the two halves of the click.","Try the three switch types in Settings.","Space or Enter press it too."],[["sw","Switch type","select","clicky",["clicky","tactile","linear"]],["label","Key label","text","Esc"]]],
+  ["light-switch","Light switch",420,2400,340,340,"Fidget","💡","1",1,"A satisfying wall switch. It lights the bulb in this tile only; the app stays dark.",["Tap the switch to flip it.","Pick the bulb colour in Settings."],[["color","Bulb colour","select","warm",["warm","white","pink","green","blue"]]]]
 ];
 
 // Board
+var LABELS=[["Fidget",-340,2340]];   // section headings on the board
 var PAD=40,minX=-340,minY=-340,maxX=0,maxY=0;
 W.forEach(function(w){maxX=Math.max(maxX,w[2]+w[4]);maxY=Math.max(maxY,w[3]+w[5])});
 var BW=maxX-minX+PAD*2,BH=maxY-minY+PAD*2;
@@ -135,6 +140,7 @@ W.forEach(function(w){
   var f=document.createElement("iframe");f.src=url(w);f.title=w[1];f.tabIndex=-1;previews[w[0]]=f;
   c.appendChild(f);c.onclick=function(){openSheet(w,true)};wrap.appendChild(c);
 });
+LABELS.forEach(function(l){var h=document.createElement("div");h.className="sec";h.textContent=l[0];h.style.left=(l[1]-minX+PAD)+"px";h.style.top=(l[2]-minY+PAD)+"px";wrap.appendChild(h)});
 function url(w){return "widgets/"+w[0]+".html"}
 function fit(){var s=Math.min(1,document.documentElement.clientWidth/BW);wrap.style.transform="scale("+s+")";wrap.style.marginLeft=s<1?"0":"auto";wrap.style.height=BH+"px";document.getElementById("stage").style.height=(BH*s)+"px"}
 window.addEventListener("resize",fit);fit();

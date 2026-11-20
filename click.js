@@ -25,5 +25,25 @@
       s.connect(g); g.connect(a.destination); s.start(when || 0);
     } catch (e) {}
   };
+
+  // Synth for physical sounds: noise bursts ringing through resonators.
+  // parts: [[freqHz, ringSeconds, gain, burstSeconds], ...]
+  window.playRing = function (parts, vol, when) {
+    try {
+      var a = ctx(); if (!a) return;
+      var sr = a.sampleRate, n = Math.floor(sr * 0.09), b = a.createBuffer(1, n, sr), d = b.getChannelData(0), pk = 1e-9;
+      parts.forEach(function (p) {
+        var f = p[0] * (1 + (Math.random() - 0.5) * 0.06), r = Math.exp(-1 / (p[1] * sr)), c = 2 * r * Math.cos(2 * Math.PI * f / sr), y1 = 0, y2 = 0, tmp = new Float32Array(n), m = 1e-9;
+        for (var i = 0; i < n; i++) { var x = (Math.random() * 2 - 1) * Math.exp(-i / (p[3] * sr)); var y = x + c * y1 - r * r * y2; y2 = y1; y1 = y; tmp[i] = y; if (Math.abs(y) > m) m = Math.abs(y); }
+        for (i = 0; i < n; i++) d[i] += tmp[i] / m * p[2];
+      });
+      for (var i = 0; i < n; i++) if (Math.abs(d[i]) > pk) pk = Math.abs(d[i]);
+      var g = (vol == null ? 1 : vol) * (0.92 + Math.random() * 0.16) / pk;
+      for (i = 0; i < n; i++) d[i] *= g * Math.min(1, i / (sr * 0.0003));
+      var s = a.createBufferSource(); s.buffer = b; s.connect(a.destination); s.start(when || 0);
+    } catch (e) {}
+  };
+  // Tiny vibration on phones that support it
+  window.buzz = function (ms) { try { if (navigator.vibrate) navigator.vibrate(ms || 8); } catch (e) {} };
   document.addEventListener("pointerdown", function () { window.clickAudio(); }, { capture: true, once: true });
 })();

@@ -1,0 +1,70 @@
+<!doctype html><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><script src="../shim.js"></script><script src="../click.js"></script>
+<title>Fidget spinner</title>
+<style>
+  html,body{margin:0;height:100%;background:#1c1c1e;font-family:system-ui,sans-serif;color:#f2f2f2;overflow:hidden;user-select:none;-webkit-user-select:none}
+  .wrap{display:flex;flex-direction:column;height:100%}
+  canvas{flex:1;width:100%;min-height:0;touch-action:none;cursor:grab;display:block}
+  .bar{display:flex;justify-content:space-around;padding:8px 6px 10px;font-size:11px;color:#999;text-align:center}
+  .bar b{display:block;font-size:17px;color:#f2f2f2;font-variant-numeric:tabular-nums}
+</style>
+<div class="wrap">
+  <canvas id="c" aria-label="Fidget spinner. Drag or flick to spin."></canvas>
+  <div class="bar"><div><b id="rpm">0</b>RPM</div><div><b id="best">0</b>Top RPM</div><div><b id="turns">0</b>Total turns</div></div>
+</div>
+<script>
+var S=appifactEmbed.settings({ticks:12,spin:"long"},function(s){S=s});
+var d=Object.assign({best:0,turns:0},appifactEmbed.load());
+var cv=document.getElementById("c"),x=cv.getContext("2d"),ang=0,vel=0,drag=null,lastTick=0,lastSnd=0,saveT=0,dpr=Math.min(2,window.devicePixelRatio||1);
+// [speed-based friction, constant bearing drag] per spin length
+var FR={long:[0.12,0.18],medium:[0.3,0.4],short:[0.8,0.9]};
+function size(){cv.width=cv.clientWidth*dpr;cv.height=cv.clientHeight*dpr}
+window.addEventListener("resize",size);size();
+function lobe(cx,cy,r,col){
+  x.beginPath();x.arc(cx,cy,r,0,7);x.fillStyle=col;x.fill();
+  x.beginPath();x.arc(cx,cy,r*0.62,0,7);x.fillStyle="#2c2c2e";x.fill();
+  x.beginPath();x.arc(cx,cy,r*0.5,0,7);x.fillStyle="#b9b9c0";x.fill();     // bearing
+  for(var i=0;i<7;i++){var a=i/7*Math.PI*2;x.beginPath();x.arc(cx+Math.cos(a)*r*0.33,cy+Math.sin(a)*r*0.33,r*0.1,0,7);x.fillStyle="#e8e8ee";x.fill()}
+  x.beginPath();x.arc(cx,cy,r*0.18,0,7);x.fillStyle="#8a8a90";x.fill();
+}
+function draw(){
+  var w=cv.width,h=cv.height,R=Math.min(w,h)*0.46,cx=w/2,cy=h/2;x.clearRect(0,0,w,h);
+  x.save();x.translate(cx,cy);x.rotate(ang);
+  var L=R*0.6,r=R*0.36;
+  x.beginPath();                                                        // body joining the lobes
+  for(var i=0;i<3;i++){var a=i/3*Math.PI*2-Math.PI/2;x.moveTo(0,0);x.lineTo(Math.cos(a-0.5)*L,Math.sin(a-0.5)*L);x.lineTo(Math.cos(a+0.5)*L,Math.sin(a+0.5)*L)}
+  x.fillStyle="#D97757";x.fill();
+  x.beginPath();x.arc(0,0,r*1.05,0,7);x.fillStyle="#D97757";x.fill();
+  for(i=0;i<3;i++){a=i/3*Math.PI*2-Math.PI/2;lobe(Math.cos(a)*L,Math.sin(a)*L,r,"#D97757")}
+  lobe(0,0,r*0.95,"#c9684a");
+  x.restore();
+}
+function tick(now){
+  var dt=Math.min(0.05,(now-(tick.t||now))/1000);tick.t=now;
+  if(!drag){
+    var f=FR[S.spin]||FR.long;vel*=Math.exp(-f[0]*dt);                  // bearing friction
+    var stop=f[1]*dt;vel=Math.abs(vel)<=stop?0:vel-Math.sign(vel)*stop;
+    ang+=vel*dt;
+  }
+  // clicks: one per detent crossed; quieter and lower as it slows
+  var per=Math.PI*2/(+S.ticks||12),k=Math.floor(ang/per);
+  if(k!==lastTick){
+    var sp=Math.abs(vel);d.turns+=Math.abs(k-lastTick)/(+S.ticks||12);lastTick=k;
+    if(now-lastSnd>16&&sp>0.3){lastSnd=now;playClick(0.9+Math.min(0.5,sp/60),Math.min(1,0.25+sp/25));if(sp<6)buzz(4)}
+  }
+  var rpm=Math.round(Math.abs(vel)*60/(Math.PI*2));
+  if(rpm>d.best)d.best=rpm;
+  document.getElementById("rpm").textContent=rpm;document.getElementById("best").textContent=d.best;document.getElementById("turns").textContent=Math.floor(d.turns);
+  if(now-saveT>1500){saveT=now;appifactEmbed.save(d)}
+  draw();requestAnimationFrame(tick);
+}
+function angAt(e){var b=cv.getBoundingClientRect();return Math.atan2(e.clientY-b.top-b.height/2,e.clientX-b.left-b.width/2)}
+cv.addEventListener("pointerdown",function(e){cv.setPointerCapture(e.pointerId);clickAudio();drag={a:angAt(e),t:performance.now(),v:0,moved:0}});
+cv.addEventListener("pointermove",function(e){if(!drag)return;var a=angAt(e),da=a-drag.a;if(da>Math.PI)da-=2*Math.PI;if(da<-Math.PI)da+=2*Math.PI;
+  var t=performance.now(),dt=Math.max(1,t-drag.t)/1000;ang+=da;drag.v=drag.v*0.5+(da/dt)*0.5;vel=drag.v;drag.a=a;drag.t=t;drag.moved+=Math.abs(da)});
+cv.addEventListener("pointerup",function(){if(!drag)return;
+  if(drag.moved<0.05)vel+=(vel>=0?1:-1)*12;                             // a plain tap gives it a push
+  else vel=Math.max(-90,Math.min(90,drag.v*1.1));
+  drag=null});
+appifactEmbed.onLoad(function(v){if(v){d.best=Math.max(d.best,v.best||0);d.turns=Math.max(d.turns,v.turns||0)}});
+requestAnimationFrame(tick);
+</script>
