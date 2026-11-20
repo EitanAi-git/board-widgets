@@ -131,20 +131,38 @@ var W=[
 
 // Board
 var LABELS=[["Fidget",-340,2340]];   // section headings on the board
-var PAD=40,minX=-340,minY=-340,maxX=0,maxY=0;
-W.forEach(function(w){maxX=Math.max(maxX,w[2]+w[4]);maxY=Math.max(maxY,w[3]+w[5])});
-var BW=maxX-minX+PAD*2,BH=maxY-minY+PAD*2;
-var wrap=document.getElementById("wrap"),previews={};
-wrap.style.width=BW+"px";wrap.style.height=BH+"px";
+var wrap=document.getElementById("wrap"),previews={},cards=[],heads=[];
 W.forEach(function(w){
   var c=document.createElement("div");c.className="card";c.setAttribute("role","button");c.setAttribute("aria-label","Open "+w[1]);
-  c.style.left=(w[2]-minX+PAD)+"px";c.style.top=(w[3]-minY+PAD)+"px";c.style.width=w[4]+"px";c.style.height=w[5]+"px";
   var f=document.createElement("iframe");f.src=url(w);f.title=w[1];f.tabIndex=-1;previews[w[0]]=f;
-  c.appendChild(f);c.onclick=function(){openSheet(w,true)};wrap.appendChild(c);
+  c.appendChild(f);c.onclick=function(){openSheet(w,true)};wrap.appendChild(c);cards.push(c);
 });
-LABELS.forEach(function(l){var h=document.createElement("div");h.className="sec";h.textContent=l[0];h.style.left=(l[1]-minX+PAD)+"px";h.style.top=(l[2]-minY+PAD)+"px";wrap.appendChild(h)});
+LABELS.forEach(function(l){var h=document.createElement("div");h.className="sec";h.textContent=l[0];wrap.appendChild(h);heads.push(h)});
 function url(w){return "widgets/"+w[0]+".html"}
-function fit(){var s=Math.min(1,document.documentElement.clientWidth/BW);wrap.style.transform="scale("+s+")";wrap.style.marginLeft=s<1?"0":"auto";wrap.style.height=BH+"px";document.getElementById("stage").style.height=(BH*s)+"px"}
+function place(el,x,y,w,h){el.style.left=x+"px";el.style.top=y+"px";if(w){el.style.width=w+"px";el.style.height=h+"px"}}
+var BW,BH;
+// Wide screens: the whiteboard's own layout. Phones: two tiles per row, so they're bigger.
+function layout(two){
+  if(!two){
+    var PAD=40,minX=-340,minY=-340,maxX=0,maxY=0;
+    W.forEach(function(w){maxX=Math.max(maxX,w[2]+w[4]);maxY=Math.max(maxY,w[3]+w[5])});
+    BW=maxX-minX+PAD*2;BH=maxY-minY+PAD*2;
+    W.forEach(function(w,i){place(cards[i],w[2]-minX+PAD,w[3]-minY+PAD,w[4],w[5])});
+    LABELS.forEach(function(l,i){place(heads[i],l[1]-minX+PAD,l[2]-minY+PAD)});
+  }else{
+    var T=340,G=24,P=24,HEAD=64,col=0,y=P;
+    W.forEach(function(w,i){
+      var li=-1;LABELS.forEach(function(l,k){if(w[6]===l[0]&&(i===0||W[i-1][6]!==l[0]))li=k});
+      if(li>=0){if(col){y+=T+G;col=0}place(heads[li],P+4,y+8);y+=HEAD}   // section starts on a fresh row
+      place(cards[i],P+col*(T+G),y,T,T);
+      if(++col===2){col=0;y+=T+G}
+    });
+    if(col)y+=T+G;
+    BW=P*2+T*2+G;BH=y-G+P;
+  }
+  wrap.style.width=BW+"px";wrap.style.height=BH+"px";
+}
+function fit(){var cw=document.documentElement.clientWidth;layout(cw<700);var s=Math.min(1,cw/BW);wrap.style.transform="scale("+s+")";wrap.style.marginLeft=s<1?"0":"auto";document.getElementById("stage").style.height=(BH*s)+"px"}
 window.addEventListener("resize",fit);fit();
 
 // Sheet
