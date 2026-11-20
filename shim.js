@@ -1,6 +1,11 @@
 // Stand-in for the whiteboard's appifactEmbed API so each widget runs on its own.
 // State is kept per page in localStorage; onLoad fires when another tab saves.
 (function () {
+  // No blue tap highlight on Android, and no focus ring after a tap (keyboard focus still shows)
+  var st = document.createElement("style");
+  st.textContent = "*{-webkit-tap-highlight-color:transparent}:focus:not(:focus-visible){outline:none}";
+  (document.head || document.documentElement).appendChild(st);
+
   var key = "widget:" + location.pathname;
   var listeners = [];
   function read() {
